@@ -1,3 +1,25 @@
+export type Member = {
+  id: string
+  createdAt: string
+  // moloch: Moloch
+  molochAddress: string
+  memberAddress: string
+  delegateKey: string
+  shares: string
+  loot: string
+  exists: boolean
+  // highestIndexYesVote:
+  // tokenTribute: string
+  didRagequit: boolean
+  // votes:// [Vote]
+  // submissions// [Proposal]
+  // tokenBalances:// [TokenBalance]
+  // rageQuits:// [RageQuit]
+  // proposedToKick: boolean
+  kicked: boolean
+  // jailed: //Proposal
+}
+
 export type Token = {
   tokenAddress: string
   decimals: string
@@ -35,6 +57,7 @@ export type Moloch = {
   id: string
   minions: Minion[]
   tokenBalances: TokenBalance[]
+  members: Member[]
 }
 
 export type MolochStatsBalance = {

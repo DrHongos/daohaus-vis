@@ -1,0 +1,11 @@
+Modify DAO Books to host Planetharium
+- modify project meta/data.
+- introduce 3d force graph OK
+- introduce filters (and subgraph queries)
+- introduce events
+- introduce DAO accessing and information display
+
+BUGS
+- graphql query is limited to 100
+- Some DAOs have no moloch!? (treasury)
+- DAOs of older versions could have no image

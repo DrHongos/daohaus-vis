@@ -74,11 +74,11 @@ export const Home: FC = () => {
   return (
     <Stack spacing="8">
       <Helmet>
-        <title>DAO books</title>
+        <title>DAO 3D</title>
       </Helmet>
       <Box>
         <Heading variant="h2" as="h2" mb="4">
-          Lookup your DAO Books
+          Lookup your DAO
         </Heading>
 
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -101,7 +101,7 @@ export const Home: FC = () => {
             disabled={isSubmitting}
             loadingText="Loading"
           >
-            View Books
+            View DAO
           </Button>
         </form>
       </Box>

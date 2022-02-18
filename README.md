@@ -1,8 +1,9 @@
-## DAOHaus Bookkeeping App
+## DAOHaus 3D vis App
+- taken from DAOHaus Bookkeeping App
 
 ### Technologies
 
-1. UI - Chakra UI, react-icons
+1. UI - Chakra UI, react-icons, Three js
 2. Framework - Create React App
 3. Forms - react-hook-form
 4. DX - eslint, prettier, typescript, husky

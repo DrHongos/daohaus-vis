@@ -1,5 +1,6 @@
+import { Button } from '@chakra-ui/button'
 import { Image } from '@chakra-ui/image'
-import { Box, Flex, Heading, Text } from '@chakra-ui/layout'
+import { Box, Flex, Heading, Spacer } from '@chakra-ui/layout'
 import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import { SWRConfig } from 'swr'
@@ -19,10 +20,10 @@ function App() {
       }}
     >
       <Helmet>
-        <title>DAO Books</title>
+        <title>DAOHAUS 3D!</title>
         <meta
           name="description"
-          content="Double entry style bookkeeping solution for moloch DAOs from https://daohaus.club/"
+          content="Visualization tool for moloch DAOs from https://daohaus.club/"
         />
       </Helmet>
       <Flex direction="column" bg="brand.darkBlue2" height="full">
@@ -39,15 +40,23 @@ function App() {
               <Flex alignItems="center">
                 <Image src={logo} mr="5" alt="Books" width={12} height={12} />
                 <Heading fontFamily="Mulish" variant="h1">
-                  DAO Books
+                  DAO Visualization tool
                 </Heading>
               </Flex>
             </Link>
-            <Box position="relative" top="4" ml="4" color="#0E99C4">
-              <Link to="/">
-                <Text fontFamily="Mulish">SWITCH DAO</Text>
-              </Link>
-            </Box>
+            <Spacer />
+            <Link to="/Vis">
+              <Button
+                type="submit"
+                variant="outline"
+                style={{ margin: 'auto' }}
+                onClick={() => {
+                  console.log('send it!')
+                }}
+              >
+                Go Vis!
+              </Button>
+            </Link>
           </Flex>
         </Box>
         <Box sx={{ minHeight: '100vh' }} flex="1" overflowY="auto">

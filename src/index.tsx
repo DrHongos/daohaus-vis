@@ -8,6 +8,8 @@ import App from './App'
 import { CustomThemeProvider } from './contexts/CustomThemeContext'
 import reportWebVitals from './reportWebVitals'
 
+// is CustomThemeProvider useful? (one DAO vis yes, but multi?)
+
 ReactDOM.render(
   <React.StrictMode>
     <HelmetProvider>

@@ -1,5 +1,5 @@
 import { Button } from '@chakra-ui/button'
-import { Spacer, Stack, Wrap } from '@chakra-ui/layout'
+import { Stack } from '@chakra-ui/layout'
 import { Select, HStack, VStack } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
@@ -154,108 +154,111 @@ export const VisPage = (): JSX.Element => {
         <title> DAO Vis Tool</title>
       </Helmet>
       {loading && <LoadingLogo />}
-      <HStack>
       <VStack>
-      <Wrap spacing="8">
-        <Select
-          style={{
-            color: 'white',
-            backgroundColor: 'transparent',
-          }}
-          onChange={(e) => {
-            console.log(`add other filter options! ${e}`)
-          }}
-        >
-          <option value="DAO">DAO</option>
-        </Select>
-        <Select
-          placeholder="select a chain"
-          style={{
-            color: 'white',
-            backgroundColor: 'transparent',
-          }}
-          onChange={(e) => {
-            setChainFilter(e.target.value)
-          }}
-        >
-          <option value="all">all</option>
-          <option value="matic">matic</option>
-          <option value="arbitrum">arbitrum</option>
-          <option value="mainnet">mainnet</option>
-          <option value="rinkeby">rinkeby</option>
-          <option value="kovan">kovan</option>
-          <option value="xdai">xdai</option>
-        </Select>
-        {apiData && (
+        <HStack>
           <Select
-            placeholder="select a DAO"
             style={{
               color: 'white',
               backgroundColor: 'transparent',
             }}
             onChange={(e) => {
-              setDaoSelected(e.target.value)
+              console.log(`add other filter options! ${e}`)
             }}
           >
-            {filteredDaos(chainFilter).map((x) => {
-              return (
-                <option key={x[0].contractAddress} value={x[0].contractAddress}>
-                  {x[0].name}
-                </option>
-              )
-            })}
+            <option value="DAO">DAO</option>
           </Select>
-        )}
+          <Select
+            placeholder="select a chain"
+            style={{
+              color: 'white',
+              backgroundColor: 'transparent',
+            }}
+            onChange={(e) => {
+              setChainFilter(e.target.value)
+            }}
+          >
+            <option value="all">all</option>
+            <option value="matic">matic</option>
+            <option value="arbitrum">arbitrum</option>
+            <option value="mainnet">mainnet</option>
+            <option value="rinkeby">rinkeby</option>
+            <option value="kovan">kovan</option>
+            <option value="xdai">xdai</option>
+          </Select>
+          {apiData && (
+            <Select
+              placeholder="select a DAO"
+              style={{
+                color: 'white',
+                backgroundColor: 'transparent',
+              }}
+              onChange={(e) => {
+                setDaoSelected(e.target.value)
+              }}
+            >
+              {filteredDaos(chainFilter).map((x) => {
+                return (
+                  <option
+                    key={x[0].contractAddress}
+                    value={x[0].contractAddress}
+                  >
+                    {x[0].name}
+                  </option>
+                )
+              })}
+            </Select>
+          )}
 
-        <Button
-          type="submit"
-          variant="outline"
-          disabled={!daoSelected}
-          onClick={() => {
-            addDao(daoSelected)
-          }}
-        >
-          Add
-        </Button>
-      </Wrap>
-      {dataHolder?.length && (
-        <div>
-          {dataHolder.map((i, index) => {
-            return (
-              <div key={index} style={{ color: 'white' }}>
-                {i.daoMetadata.name}
-                <Button
-                  type=""
-                  style={{ marginLeft: '16px' }}
-                  variant="outline"
-                  onClick={() => {
-                    setDataHolder(
-                      dataHolder.map((el, item) =>
-                        item === index ? { ...el, hidden: !el.hidden } : el
-                      )
-                    )
-                  }}
-                >
-                  {dataHolder[index].hidden ? 'Unhide' : 'Hide'}
-                </Button>
-                <Button
-                  type=""
-                  variant="outline"
-                  onClick={() => {
-                    setList(list.filter((_, i) => i !== index))
-                    setDataHolder(dataHolder.filter((_, i) => i !== index))
-                  }}
-                >
-                  Out
-                </Button>
-              </div>
-            )
-          })}
-        </div>
-      )}
+          <Button
+            type="submit"
+            variant="outline"
+            disabled={!daoSelected}
+            onClick={() => {
+              addDao(daoSelected)
+            }}
+          >
+            Add
+          </Button>
+        </HStack>
+        <HStack>
+          {dataHolder?.length && (
+            <div>
+              {dataHolder.map((i, index) => {
+                return (
+                  <div key={index} style={{ color: 'white' }}>
+                    {i?.daoMetadata?.name}
+                    <Button
+                      type=""
+                      style={{ marginLeft: '16px' }}
+                      variant="outline"
+                      onClick={() => {
+                        setDataHolder(
+                          dataHolder.map((el, item) =>
+                            item === index ? { ...el, hidden: !el.hidden } : el
+                          )
+                        )
+                      }}
+                    >
+                      {dataHolder[index].hidden ? 'Unhide' : 'Hide'}
+                    </Button>
+                    <Button
+                      type=""
+                      variant="outline"
+                      onClick={() => {
+                        setList(list.filter((_, i) => i !== index))
+                        setDataHolder(dataHolder.filter((_, i) => i !== index))
+                      }}
+                    >
+                      Out
+                    </Button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          <ForceGraph nodes={nodes} links={links} />
+        </HStack>
       </VStack>
-      <ForceGraph nodes={nodes} links={links} />
-      </HStack>
     </Stack>
   )
 }

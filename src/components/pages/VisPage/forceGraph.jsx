@@ -7,7 +7,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { getImageFromIPFSHash } from '../../../utils/web3/ipfs'
 
 // migrate to Ts
-// test aura f(chain)
+// test aura color f(chain)
 // test size f(members | treasure)
 
 const ForceGraph = ({ nodes, links }) => {

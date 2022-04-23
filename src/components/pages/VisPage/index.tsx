@@ -1,6 +1,6 @@
 import { Button } from '@chakra-ui/button'
 import { Spacer, Stack, Wrap } from '@chakra-ui/layout'
-import { Select } from '@chakra-ui/react'
+import { Select, HStack, VStack } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 
@@ -154,12 +154,13 @@ export const VisPage = (): JSX.Element => {
         <title> DAO Vis Tool</title>
       </Helmet>
       {loading && <LoadingLogo />}
+      <HStack>
+      <VStack>
       <Wrap spacing="8">
         <Select
           style={{
             color: 'white',
             backgroundColor: 'transparent',
-            width: '20%',
           }}
           onChange={(e) => {
             console.log(`add other filter options! ${e}`)
@@ -172,7 +173,6 @@ export const VisPage = (): JSX.Element => {
           style={{
             color: 'white',
             backgroundColor: 'transparent',
-            width: '20%',
           }}
           onChange={(e) => {
             setChainFilter(e.target.value)
@@ -192,7 +192,6 @@ export const VisPage = (): JSX.Element => {
             style={{
               color: 'white',
               backgroundColor: 'transparent',
-              width: '20%',
             }}
             onChange={(e) => {
               setDaoSelected(e.target.value)
@@ -254,8 +253,9 @@ export const VisPage = (): JSX.Element => {
           })}
         </div>
       )}
+      </VStack>
       <ForceGraph nodes={nodes} links={links} />
-      <Spacer />
+      </HStack>
     </Stack>
   )
 }

@@ -29,22 +29,11 @@ export const VisPage = (): JSX.Element => {
   const [daoSelected, setDaoSelected] = useState()
   const [dataHolder, setDataHolder] = useState<daoObject[]>()
   //--------------------------------- TODO LIST
-  // - add a button after selector to add the DAO in the graph
-  // - after adding a new DAO, fetch only that and add it
-  // - add a search input for DAOs
+
   //--------------------------------- DATA TO APP
   const [list, setList] = useState([
-    '0xef3d8c4fbb1860fceab16595db7e650cd5ad51c1', // starter
+    '0xef3d8c4fbb1860fceab16595db7e650cd5ad51c1', // starter (daoHausWarcamp)
   ])
-  // const daosList = {
-  //   rg: '0xfe1084bc16427e5eb7f13fc19bcd4e641f7d571f',
-  //   s0: '0x515e6d357374a532ead74adbcda02bf6b3c083a9',
-  //   s1: '0x10e31c10fb4912bc408ce6c585074bd8693f2158',
-  //   s2: '0xd83ac7d30495e1e1d2f42a0d796a058089719a45',
-  //   s3: '0x7bde8f8a3d59b42d0d8fab3a46e9f42e8e3c2de8',
-  //   daoHausWarcamp: '0xef3d8c4fbb1860fceab16595db7e650cd5ad51c1',
-  //   metaCartel: '0xb152b115c94275b54a3f0b08c1aa1d21f32a659a',
-  // }
   const getApiMetadata = async () => {
     try {
       const response = await fetch(
@@ -154,8 +143,8 @@ export const VisPage = (): JSX.Element => {
         <title> DAO Vis Tool</title>
       </Helmet>
       {loading && <LoadingLogo />}
-      <VStack>
-        <HStack>
+      <HStack>
+        <VStack>
           <Select
             style={{
               color: 'white',
@@ -219,8 +208,6 @@ export const VisPage = (): JSX.Element => {
           >
             Add
           </Button>
-        </HStack>
-        <HStack>
           {dataHolder?.length && (
             <div>
               {dataHolder.map((i, index) => {
@@ -256,9 +243,9 @@ export const VisPage = (): JSX.Element => {
               })}
             </div>
           )}
-          <ForceGraph nodes={nodes} links={links} />
-        </HStack>
-      </VStack>
+        </VStack>
+        <ForceGraph nodes={nodes} links={links} />
+      </HStack>
     </Stack>
   )
 }

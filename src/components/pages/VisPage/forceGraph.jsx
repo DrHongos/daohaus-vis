@@ -118,7 +118,7 @@ const ForceGraph = ({ nodes, links }) => {
 
   return (
     <>
-      <div id="3d-graph" style={{ width: '70%', height: '30%' }} />
+      <div id="3d-graph" style={{ width: '50%', height: '30%' }} />
     </>
   )
 }

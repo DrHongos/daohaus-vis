@@ -1,4 +1,5 @@
 import ForceGraph3D from '3d-force-graph'
+import { Flex } from '@chakra-ui/react'
 import makeBlockie from 'ethereum-blockies-base64'
 import React, { useEffect, useRef } from 'react'
 import * as THREE from 'three'
@@ -118,7 +119,7 @@ const ForceGraph = ({ nodes, links }) => {
 
   return (
     <>
-      <div id="3d-graph" style={{ width: '50%', height: '30%' }} />
+      <Flex id="3d-graph" style={{ width: '50%', height: '30%' }} />
     </>
   )
 }

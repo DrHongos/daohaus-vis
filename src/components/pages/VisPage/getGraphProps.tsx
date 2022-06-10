@@ -6,6 +6,8 @@ const GET_MOLOCH_MEMBERS = `
 query moloch($contractAddr: String!) {
   moloch(id: $contractAddr, first: 200) {
     id
+    totalShares
+    totalLoot
     members{
       id
       createdAt
@@ -21,6 +23,9 @@ query moloch($contractAddr: String!) {
   }
 }
 `
+// add proposals and votes
+// continue from here: https://daohaus.club/docs/devs/subgraphs
+
 // what about multi moloch graphs?
 // https://www.tabnine.com/blog/understanding-graphql-filters/
 type MolochData = {

@@ -1,10 +1,14 @@
 Modify DAO Books to host Planetharium
 - modify project meta/data.
-- introduce 3d force graph OK
+- display address connected DAOs (simple click ADD)
 - introduce filters (and subgraph queries)
 - introduce events
 - introduce DAO accessing and information display
-
+- proposals and votes (signaling events)
+- minions & user connected
+- members sized by shares/loot
+- members history recreation (createdAt) (select some DAOs and see the history)
+- members delegation
 BUGS
 - graphql query is limited to 100
 - Some DAOs have no moloch!? (treasury)

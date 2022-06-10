@@ -1,6 +1,20 @@
 import { Button } from '@chakra-ui/button'
 import { Stack } from '@chakra-ui/layout'
-import { Select, HStack, VStack } from '@chakra-ui/react'
+import {
+  Select,
+  Center,
+  HStack,
+  VStack,
+  Table,
+  Thead,
+  Tbody,
+  Checkbox,
+  Tr,
+  Th,
+  Td,
+  TableCaption,
+  TableContainer,
+} from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 
@@ -25,8 +39,11 @@ export const VisPage = (): JSX.Element => {
   const [nodes, setNodes] = useState()
   const [links, setLinks] = useState()
   const [loading, setLoading] = useState(false)
+  const [search, setSearch] = useState('')
+  const [searchList, setSearchList] = useState<daoObject[]>()
+  const [provisionalList, setProvisionalList] = useState<daoObject[]>([])
   const [chainFilter, setChainFilter] = useState()
-  const [daoSelected, setDaoSelected] = useState()
+  // const [daoSelected, setDaoSelected] = useState()
   const [dataHolder, setDataHolder] = useState<daoObject[]>()
   //--------------------------------- TODO LIST
 
@@ -36,6 +53,7 @@ export const VisPage = (): JSX.Element => {
   ])
   const getApiMetadata = async () => {
     try {
+      console.log(`fetching daoMeta`)
       const response = await fetch(
         'https://daohaus-metadata.s3.amazonaws.com/daoMeta.json'
       )
@@ -55,6 +73,41 @@ export const VisPage = (): JSX.Element => {
     }
   }
 
+  useEffect(() => {
+    function filterList(data) {
+      const found = Object.values(data).filter((x) => {
+        return x[0].name.toLowerCase().includes(search.toLowerCase())
+      })
+      if (found.length) {
+        setSearchList(found)
+      } else {
+        setSearchList([])
+      }
+    }
+    if (search.length > 3 && apiData) {
+      if (chainFilter) {
+        filterList(filteredDaos(chainFilter))
+      } else {
+        filterList(apiData)
+      }
+    } else {
+      setSearchList(null)
+    }
+  }, [search])
+
+  const handleProvisionalList = (inOut, dao) => {
+    if (inOut) {
+      setProvisionalList(provisionalList.concat(dao))
+    } else {
+      if (provisionalList) {
+        const filteredOut = provisionalList.filter((x) => {
+          return x !== dao
+        })
+        setProvisionalList(filteredOut)
+      }
+    }
+  }
+
   //--------------------------------- DATA TO GRAPH
   const updateProps = async () => {
     const totalPromises = []
@@ -66,22 +119,32 @@ export const VisPage = (): JSX.Element => {
     })
   }
 
-  async function addDao(daoAddress) {
-    const newData = await getGraphProps(daoAddress)
-    if (!newData.error) {
-      // handle errors! there are many groups with no member, no moloch, etc
-      // moloch v1 has no image and does not handle that
-      const newArray = dataHolder.concat(newData)
-      setDataHolder(newArray)
-    }
+  async function addDaos(daosList) {
+    const newDataPromises = []
+    provisionalList.forEach((x) => {
+      newDataPromises.push(getGraphProps(x.contractAddress))
+    })
+    Promise.all(newDataPromises).then((results) => {
+      setDataHolder(dataHolder.concat(results))
+      setProvisionalList([])
+    })
   }
+
+  // async function addDao(daoAddress) {
+  //   const newData = await getGraphProps(daoAddress)
+  //   if (!newData.error) {
+  //     // handle errors! there are many groups with no member, no moloch, etc
+  //     // moloch v1 has no image and does not handle that
+  //     const newArray = dataHolder.concat(newData)
+  //     setDataHolder(newArray)
+  //   }
+  // }
 
   function createData(data) {
     const nnodes = data.moloch.members.map((x) => {
       return {
         id: x.memberAddress,
         label: x.memberAddress, // ENS would be just.. great..
-
         group: 3,
         size: 2,
         shares: x.shares,
@@ -110,7 +173,9 @@ export const VisPage = (): JSX.Element => {
     const acumLinks = []
     if (dataHolder) {
       const viewList = dataHolder.filter((x) => x.hidden === false)
+
       for (let i = 0; i < viewList.length; i++) {
+        // console.log(`creating view data for ${JSON.stringify(viewList[i])}`)
         const { nnodes, nlinks } = createData(viewList[i])
         acumNodes.push(nnodes)
         acumLinks.push(nlinks)
@@ -138,35 +203,36 @@ export const VisPage = (): JSX.Element => {
   }, [])
 
   return (
-    <Stack spacing="8">
+    <Stack>
       <Helmet>
         <title> DAO Vis Tool</title>
       </Helmet>
       {loading && <LoadingLogo />}
       <HStack>
-        <VStack>
+        <VStack align="stretch" spacing={4}>
+          {/*
+                  <Select
+                    style={{
+                      color: 'white',
+                      backgroundColor: 'transparent',
+                    }}
+                    onChange={(e) => {
+                      console.log(`add other filter options! ${e}`)
+                    }}
+                  >
+                    <option value="DAO">DAO</option>
+                  </Select>
+          */}
+
           <Select
             style={{
-              color: 'white',
-              backgroundColor: 'transparent',
-            }}
-            onChange={(e) => {
-              console.log(`add other filter options! ${e}`)
-            }}
-          >
-            <option value="DAO">DAO</option>
-          </Select>
-          <Select
-            placeholder="select a chain"
-            style={{
-              color: 'white',
-              backgroundColor: 'transparent',
+              color: 'gray',
             }}
             onChange={(e) => {
               setChainFilter(e.target.value)
             }}
           >
-            <option value="all">all</option>
+            <option value="">all networks</option>
             <option value="matic">matic</option>
             <option value="arbitrum">arbitrum</option>
             <option value="mainnet">mainnet</option>
@@ -174,7 +240,8 @@ export const VisPage = (): JSX.Element => {
             <option value="kovan">kovan</option>
             <option value="xdai">xdai</option>
           </Select>
-          {apiData && (
+
+          {/*apiData && (
             <Select
               placeholder="select a DAO"
               style={{
@@ -196,18 +263,120 @@ export const VisPage = (): JSX.Element => {
                 )
               })}
             </Select>
+          )*/}
+          {/*daoSelected && (
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={!daoSelected}
+              onClick={() => {
+                addDao(daoSelected)
+              }}
+            >
+              Add
+            </Button>
+          )*/}
+          <input
+            type="string"
+            value={search}
+            style={{
+              borderRadius: '10px',
+              padding: '10px',
+            }}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search for the DAO"
+          />
+          {searchList?.length && (
+            <TableContainer>
+              <Table
+                variant="simple"
+                style={{
+                  color: 'white',
+                  fontSize: '14px',
+                }}
+              >
+                <TableCaption>Results of the search</TableCaption>
+                <Thead>
+                  <Tr>
+                    <Th>Name</Th>
+                    <Th>Network</Th>
+                    <Th>Select</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {searchList.map((x, i) => {
+                    return (
+                      <Tr key={i}>
+                        <Td>{x[0].name}</Td>
+                        <Td>{x[0].network}</Td>
+                        <Td>
+                          <Checkbox
+                            onChange={(e) =>
+                              handleProvisionalList(e.target.checked, x)
+                            }
+                          />
+                        </Td>
+                      </Tr>
+                    )
+                  })}
+                </Tbody>
+              </Table>
+            </TableContainer>
+          )}
+          {provisionalList?.length && (
+            <TableContainer>
+              <Table
+                variant="simple"
+                style={{
+                  color: 'white',
+                  fontSize: '14px',
+                }}
+              >
+                <TableCaption>Provisional list</TableCaption>
+                <Thead>
+                  <Tr>
+                    <Th>Name</Th>
+                    <Th>Network</Th>
+                    <Th>Select</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {provisionalList.map((x, i) => {
+                    return (
+                      <Tr key={i}>
+                        <Td>{x.name}</Td>
+                        <Td>{x.network}</Td>
+                        <Td>
+                          <Checkbox
+                            isChecked={provisionalList.some(
+                              (y) => y.name === x.name
+                            )}
+                            onChange={(e) =>
+                              handleProvisionalList(e.target.checked, x)
+                            }
+                          />
+                        </Td>
+                      </Tr>
+                    )
+                  })}
+                </Tbody>
+              </Table>
+              <Center>
+                <button
+                  style={{
+                    color: 'white',
+                    border: '1px solid white',
+                    borderRadius: '10px',
+                    padding: '10px',
+                  }}
+                  onClick={() => addDaos(provisionalList)}
+                >
+                  Add list
+                </button>
+              </Center>
+            </TableContainer>
           )}
 
-          <Button
-            type="submit"
-            variant="outline"
-            disabled={!daoSelected}
-            onClick={() => {
-              addDao(daoSelected)
-            }}
-          >
-            Add
-          </Button>
           {dataHolder?.length && (
             <div>
               {dataHolder.map((i, index) => {

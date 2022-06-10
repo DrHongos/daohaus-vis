@@ -39,6 +39,7 @@ export const VisPage = (): JSX.Element => {
   const [nodes, setNodes] = useState()
   const [links, setLinks] = useState()
   const [loading, setLoading] = useState(false)
+
   const [search, setSearch] = useState('')
   const [searchList, setSearchList] = useState<daoObject[]>()
   const [provisionalList, setProvisionalList] = useState<daoObject[]>([])
@@ -155,6 +156,8 @@ export const VisPage = (): JSX.Element => {
       return {
         source: data.daoMetadata.contractAddress,
         target: x.id,
+        shares: parseInt(x.shares, 10) / parseInt(data?.moloch.totalShares, 10),
+        loot: parseInt(x.loot, 10) / parseInt(data?.moloch.totalLoot, 10),
         value: 1,
       }
     })

@@ -69,7 +69,6 @@ const ForceGraph = ({ nodes, links }) => {
           } else {
             sprite.scale.set(8, 8, 1)
           }
-
           return sprite
         })
         .onNodeClick((node) => {
@@ -95,6 +94,16 @@ const ForceGraph = ({ nodes, links }) => {
         .linkDirectionalParticleWidth(3)
         .linkWidth((link) => (highlightLinks.has(link) ? 0.5 : 0.8))
         .graphData(gData)
+
+      // .d3Force("link", d3.forceLink().strength(d => parseInt(d.shares)))
+
+      graph.d3Force('link').distance((link) => {
+        if (link.shares > 0.005) {
+          return 1 / link.shares
+        } else {
+          return 20
+        }
+      })
 
       graph.onBackgroundClick(zoomOut)
       const bloomPass = new UnrealBloomPass()

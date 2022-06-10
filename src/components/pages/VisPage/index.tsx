@@ -40,6 +40,7 @@ export const VisPage = (): JSX.Element => {
   const [links, setLinks] = useState()
   const [loading, setLoading] = useState(false)
 
+  const [sharePower, setSharePower] = useState(false)
   const [search, setSearch] = useState('')
   const [searchList, setSearchList] = useState<daoObject[]>()
   const [provisionalList, setProvisionalList] = useState<daoObject[]>([])
@@ -379,7 +380,13 @@ export const VisPage = (): JSX.Element => {
               </Center>
             </TableContainer>
           )}
-
+          <Checkbox
+            style={{ color: 'white' }}
+            isChecked={sharePower}
+            onChange={(e) => setSharePower(e.target.checked)}
+          >
+            Members share power
+          </Checkbox>
           {dataHolder?.length && (
             <div>
               {dataHolder.map((i, index) => {
@@ -416,7 +423,7 @@ export const VisPage = (): JSX.Element => {
             </div>
           )}
         </VStack>
-        <ForceGraph nodes={nodes} links={links} />
+        <ForceGraph nodes={nodes} links={links} sharePower={sharePower} />
       </HStack>
     </Stack>
   )

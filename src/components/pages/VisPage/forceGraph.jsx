@@ -11,7 +11,7 @@ import { getImageFromIPFSHash } from '../../../utils/web3/ipfs'
 // test aura color f(chain)
 // test size f(members | treasure)
 
-const ForceGraph = ({ nodes, links }) => {
+const ForceGraph = ({ nodes, links, sharePower }) => {
   // const [selectedNode, setSelectedNode] = useState()
 
   function focusNode(graph, node) {
@@ -97,13 +97,15 @@ const ForceGraph = ({ nodes, links }) => {
 
       // .d3Force("link", d3.forceLink().strength(d => parseInt(d.shares)))
 
-      graph.d3Force('link').distance((link) => {
-        if (link.shares > 0.005) {
-          return 1 / link.shares
-        } else {
-          return 20
-        }
-      })
+      if (sharePower) {
+        graph.d3Force('link').distance((link) => {
+          if (link.shares > 0.005) {
+            return 1 / link.shares
+          } else {
+            return 20
+          }
+        })
+      }
 
       graph.onBackgroundClick(zoomOut)
       const bloomPass = new UnrealBloomPass()
@@ -124,7 +126,7 @@ const ForceGraph = ({ nodes, links }) => {
     if (nodes && links) {
       graph.current = await create3dGraph()
     }
-  }, [nodes, links])
+  }, [nodes, links, sharePower])
 
   return (
     <>

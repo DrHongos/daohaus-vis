@@ -19,6 +19,9 @@ query moloch($contractAddr: String!) {
       exists
       didRagequit
       kicked
+      isSafeMinion {
+        id
+      }
     }
   }
 }

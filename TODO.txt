@@ -13,3 +13,8 @@ BUGS
 - graphql query is limited to 100
 - Some DAOs have no moloch!? (treasury)
 - DAOs of older versions could have no image
+
+
+TOTEST
+- links construction based on !nodes.hidden
+- create timeline with createdAt attr

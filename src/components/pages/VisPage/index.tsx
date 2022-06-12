@@ -40,6 +40,8 @@ export const VisPage = (): JSX.Element => {
   const [links, setLinks] = useState()
   const [loading, setLoading] = useState(false)
 
+  // const [timestamp, setTimestamp] = useState() // now
+  const [onlyRelated, setOnlyRelated] = useState(false)
   const [sharePower, setSharePower] = useState(false)
   const [search, setSearch] = useState('')
   const [searchList, setSearchList] = useState<daoObject[]>()
@@ -144,6 +146,12 @@ export const VisPage = (): JSX.Element => {
 
   function createData(data) {
     const nnodes = data.moloch.members.map((x) => {
+      let minion
+      if (x.isSafeMinion?.id) {
+        minion = true
+      } else {
+        minion = false
+      }
       return {
         id: x.memberAddress,
         label: x.memberAddress, // ENS would be just.. great..
@@ -151,6 +159,9 @@ export const VisPage = (): JSX.Element => {
         size: 2,
         shares: x.shares,
         loot: x.loot,
+        isSafeMinion: minion,
+        createdAt: parseInt(x.createdAt, 10),
+        hidden: false,
       }
     })
     const nlinks = nnodes.map((x) => {
@@ -160,6 +171,7 @@ export const VisPage = (): JSX.Element => {
         shares: parseInt(x.shares, 10) / parseInt(data?.moloch.totalShares, 10),
         loot: parseInt(x.loot, 10) / parseInt(data?.moloch.totalLoot, 10),
         value: 1,
+        hidden: false,
       }
     })
     nnodes.push({
@@ -184,14 +196,44 @@ export const VisPage = (): JSX.Element => {
         acumNodes.push(nnodes)
         acumLinks.push(nlinks)
       }
+
       const uniqueNodes = acumNodes.flat().reduce((unique, o) => {
         if (!unique.some((obj) => obj.id === o.id)) {
           unique.push(o)
         }
         return unique
       }, [])
-      setNodes(uniqueNodes)
-      setLinks(acumLinks.flat())
+
+      const onlyRel = uniqueNodes.reduce((rep, o) => {
+        const linksSum = acumLinks.flat().filter((x) => x.target === o.id)
+        if (linksSum.length > 1 || o.group === 0) {
+          // console.log(`passes ${JSON.stringify(o)}`)
+          rep.push(o)
+        }
+        return rep
+      }, [])
+      const validNodes = onlyRel.map((x) => {
+        return x.target
+      })
+
+      const onlyRelLinks = acumLinks.flat().reduce((valid, o) => {
+        // not working.. have to think it better
+        if (validNodes.includes(o.target.id)) {
+          valid.push(o)
+        }
+        return valid
+      }, [])
+
+      if (onlyRelated) {
+        setNodes(onlyRel)
+        setLinks(onlyRelLinks)
+      } else {
+        // if (timestamp) {
+        //
+        // }
+        setNodes(uniqueNodes)
+        setLinks(acumLinks.flat())
+      }
     }
   }, [dataHolder])
 
@@ -280,16 +322,33 @@ export const VisPage = (): JSX.Element => {
               Add
             </Button>
           )*/}
-          <input
-            type="string"
-            value={search}
-            style={{
-              borderRadius: '10px',
-              padding: '10px',
-            }}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search for the DAO"
-          />
+          <span style={{ color: 'white' }}>
+            <input
+              type="string"
+              value={search}
+              style={{
+                borderRadius: '10px',
+                padding: '10px',
+                border: '1px solid white',
+                backgroundColor: 'transparent',
+              }}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search for the DAO"
+            />
+            {search && (
+              <button
+                style={{
+                  marginLeft: '15px',
+                  borderRadius: '5px',
+                  padding: '6px',
+                  border: '1px solid white',
+                }}
+                onClick={() => setSearch('')}
+              >
+                ERASE
+              </button>
+            )}
+          </span>
           {searchList?.length && (
             <TableContainer>
               <Table
@@ -380,6 +439,13 @@ export const VisPage = (): JSX.Element => {
               </Center>
             </TableContainer>
           )}
+          {/*
+          <input
+            placeholder="Before timestamp"
+            type="number"
+            onChange={setTimestamp}
+          />
+          */}
           <Checkbox
             style={{ color: 'white' }}
             isChecked={sharePower}
@@ -387,6 +453,15 @@ export const VisPage = (): JSX.Element => {
           >
             Members share power
           </Checkbox>
+          <Checkbox
+            disabled
+            style={{ color: 'white' }}
+            isChecked={onlyRelated}
+            onChange={(e) => setOnlyRelated(e.target.checked)}
+          >
+            Only related
+          </Checkbox>
+
           {dataHolder?.length && (
             <div>
               {dataHolder.map((i, index) => {
@@ -408,7 +483,6 @@ export const VisPage = (): JSX.Element => {
                       {dataHolder[index].hidden ? 'Unhide' : 'Hide'}
                     </Button>
                     <Button
-                      type=""
                       variant="outline"
                       onClick={() => {
                         setList(list.filter((_, i) => i !== index))

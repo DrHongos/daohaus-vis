@@ -6,7 +6,7 @@ import * as THREE from 'three'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 
 import { getImageFromIPFSHash } from '../../../utils/web3/ipfs'
-
+import minionImg from './assets/minion.png'
 // migrate to Ts
 // test aura color f(chain)
 // test size f(members | treasure)
@@ -42,9 +42,8 @@ const ForceGraph = ({ nodes, links, sharePower }) => {
       let hoverNode: string | null = null
       /* eslint-disable-next-line no-inner-declarations */
       function updateHighlight() {
-        graph
-          .linkWidth(graph.linkWidth())
-          .linkDirectionalParticles(graph.linkDirectionalParticles())
+        graph.linkWidth(graph.linkWidth())
+        // .linkDirectionalParticles(graph.linkDirectionalParticles())
       }
 
       const graph = ForceGraph3D()(spaceHolder)
@@ -52,9 +51,12 @@ const ForceGraph = ({ nodes, links, sharePower }) => {
         .nodeLabel('label')
         // .nodeAutoColorBy('group')
         .nodeThreeObject((node: Node) => {
+          if (node.hidden) return
           let imageUrl
           if (node && node.image) {
             imageUrl = getImageFromIPFSHash(node.image)
+          } else if (node && node.isSafeMinion) {
+            imageUrl = minionImg
           } else {
             imageUrl = makeBlockie(node.id)
           }
@@ -62,12 +64,14 @@ const ForceGraph = ({ nodes, links, sharePower }) => {
           const material = new THREE.SpriteMaterial({
             map: imgTexture,
             color: 0xffffff,
+            transparent: true,
+            opacity: 0.8,
           })
           const sprite = new THREE.Sprite(material)
-          if (node.group === 0) {
-            sprite.scale.set(60, 60, 1)
+          if (node.group === 0 || node.isSafeMinion) {
+            sprite.scale.set(100, 100, 1)
           } else {
-            sprite.scale.set(8, 8, 1)
+            sprite.scale.set(20, 20, 1)
           }
           return sprite
         })
@@ -90,9 +94,10 @@ const ForceGraph = ({ nodes, links, sharePower }) => {
           hoverNode = node || null
           updateHighlight()
         })
-        .linkDirectionalParticles((link) => (highlightLinks.has(link) ? 3 : 0))
-        .linkDirectionalParticleWidth(3)
-        .linkWidth((link) => (highlightLinks.has(link) ? 0.5 : 0.8))
+        // .linkDirectionalParticles((link) => (highlightLinks.has(link) ? 3 : 0))
+        // .linkDirectionalParticleWidth(3)
+        .linkWidth((link) => (highlightLinks.has(link) ? 5 : 0.8))
+        .linkColor((link) => (highlightLinks.has(link) ? 'green' : 'gray'))
         .graphData(gData)
 
       // .d3Force("link", d3.forceLink().strength(d => parseInt(d.shares)))
@@ -100,11 +105,13 @@ const ForceGraph = ({ nodes, links, sharePower }) => {
       if (sharePower) {
         graph.d3Force('link').distance((link) => {
           if (link.shares > 0.005) {
-            return 1 / link.shares
+            return 10 / link.shares
           } else {
-            return 20
+            return 200
           }
         })
+      } else {
+        graph.d3Force('link').distance(100)
       }
 
       graph.onBackgroundClick(zoomOut)

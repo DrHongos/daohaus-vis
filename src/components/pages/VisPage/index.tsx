@@ -14,6 +14,10 @@ import {
   Td,
   TableCaption,
   TableContainer,
+  Slider,
+  SliderTrack,
+  SliderThumb,
+  SliderFilledTrack,
 } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
@@ -39,8 +43,8 @@ export const VisPage = (): JSX.Element => {
   const [nodes, setNodes] = useState()
   const [links, setLinks] = useState()
   const [loading, setLoading] = useState(false)
-
-  // const [timestamp, setTimestamp] = useState() // now
+  const [minMax, setMinMax] = useState<number[]>([])
+  const [timestamp, setTimestamp] = useState<number>()
   const [onlyRelated, setOnlyRelated] = useState(false)
   const [sharePower, setSharePower] = useState(false)
   const [search, setSearch] = useState('')
@@ -50,6 +54,10 @@ export const VisPage = (): JSX.Element => {
   // const [daoSelected, setDaoSelected] = useState()
   const [dataHolder, setDataHolder] = useState<daoObject[]>()
   //--------------------------------- TODO LIST
+  // keep objects in session storage for user save/delete
+  // add GUI to test
+  // copy address / open etherscan
+  //
 
   //--------------------------------- DATA TO APP
   const [list, setList] = useState([
@@ -161,7 +169,7 @@ export const VisPage = (): JSX.Element => {
         loot: x.loot,
         isSafeMinion: minion,
         createdAt: parseInt(x.createdAt, 10),
-        hidden: false,
+        hidden: x.createdAt > timestamp,
       }
     })
     const nlinks = nnodes.map((x) => {
@@ -171,13 +179,14 @@ export const VisPage = (): JSX.Element => {
         shares: parseInt(x.shares, 10) / parseInt(data?.moloch.totalShares, 10),
         loot: parseInt(x.loot, 10) / parseInt(data?.moloch.totalLoot, 10),
         value: 1,
-        hidden: false,
+        hidden: x.hidden,
       }
     })
     nnodes.push({
       id: data?.daoMetadata?.contractAddress,
       label: data?.daoMetadata?.name,
       image: data?.daoMetadata?.avatarImg,
+      hidden: false,
       group: 0,
       size: 10,
     })
@@ -228,17 +237,32 @@ export const VisPage = (): JSX.Element => {
         setNodes(onlyRel)
         setLinks(onlyRelLinks)
       } else {
-        // if (timestamp) {
-        //
-        // }
         setNodes(uniqueNodes)
         setLinks(acumLinks.flat())
       }
     }
-  }, [dataHolder])
+  }, [dataHolder, timestamp])
+
+  useEffect(() => {
+    let maxVal
+    if (nodes?.length) {
+      const listOfTimestamps = nodes.map((x) => {
+        if (typeof x.createdAt === 'number') return x.createdAt
+      })
+      const fixed = listOfTimestamps.filter((x) => {
+        return x != null
+      })
+      maxVal = Math.max(...fixed)
+      setMinMax([Math.min(...fixed), maxVal])
+    }
+    if (!timestamp) {
+      setTimestamp(maxVal)
+    }
+  }, [nodes])
 
   useEffect(async () => {
     setLoading(true)
+    // first check session storage
     const daoHausMetadata = await getApiMetadata()
     if (daoHausMetadata) {
       // maybe use session storage to make it faster
@@ -256,20 +280,6 @@ export const VisPage = (): JSX.Element => {
       {loading && <LoadingLogo />}
       <HStack>
         <VStack align="stretch" spacing={4}>
-          {/*
-                  <Select
-                    style={{
-                      color: 'white',
-                      backgroundColor: 'transparent',
-                    }}
-                    onChange={(e) => {
-                      console.log(`add other filter options! ${e}`)
-                    }}
-                  >
-                    <option value="DAO">DAO</option>
-                  </Select>
-          */}
-
           <Select
             style={{
               color: 'gray',
@@ -287,41 +297,10 @@ export const VisPage = (): JSX.Element => {
             <option value="xdai">xdai</option>
           </Select>
 
-          {/*apiData && (
-            <Select
-              placeholder="select a DAO"
-              style={{
-                color: 'white',
-                backgroundColor: 'transparent',
-              }}
-              onChange={(e) => {
-                setDaoSelected(e.target.value)
-              }}
-            >
-              {filteredDaos(chainFilter).map((x) => {
-                return (
-                  <option
-                    key={x[0].contractAddress}
-                    value={x[0].contractAddress}
-                  >
-                    {x[0].name}
-                  </option>
-                )
-              })}
-            </Select>
-          )*/}
-          {/*daoSelected && (
-            <Button
-              type="submit"
-              variant="outline"
-              disabled={!daoSelected}
-              onClick={() => {
-                addDao(daoSelected)
-              }}
-            >
-              Add
-            </Button>
-          )*/}
+          <p style={{ color: 'white' }}>
+            Right click on node to copy to clipboard
+          </p>
+          <p style={{ color: 'white' }}>TODO: save to session storage</p>
           <span style={{ color: 'white' }}>
             <input
               type="string"
@@ -439,13 +418,33 @@ export const VisPage = (): JSX.Element => {
               </Center>
             </TableContainer>
           )}
-          {/*
-          <input
-            placeholder="Before timestamp"
-            type="number"
-            onChange={setTimestamp}
-          />
-          */}
+          {minMax && timestamp && (
+            <>
+              <Slider
+                aria-label="slider-ex-2"
+                colorScheme="pink"
+                defaultValue={30}
+                min={minMax[0]}
+                max={minMax[1]}
+                value={timestamp}
+                onChange={(val) => {
+                  setTimestamp(parseInt(val))
+                }}
+              >
+                <SliderTrack>
+                  <SliderFilledTrack />
+                </SliderTrack>
+                <SliderThumb />
+              </Slider>
+              <p
+                style={{
+                  color: 'white',
+                }}
+              >
+                Date selected: {new Date(timestamp * 1000).toLocaleDateString()}
+              </p>
+            </>
+          )}
           <Checkbox
             style={{ color: 'white' }}
             isChecked={sharePower}
@@ -497,7 +496,14 @@ export const VisPage = (): JSX.Element => {
             </div>
           )}
         </VStack>
-        <ForceGraph nodes={nodes} links={links} sharePower={sharePower} />
+        {nodes && links && timestamp && (
+          <ForceGraph
+            nodes={nodes}
+            links={links}
+            sharePower={sharePower}
+            lowLimitTimestamp={timestamp}
+          />
+        )}
       </HStack>
     </Stack>
   )

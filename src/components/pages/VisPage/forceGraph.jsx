@@ -11,7 +11,7 @@ import minionImg from './assets/minion.png'
 // test aura color f(chain)
 // test size f(members | treasure)
 
-const ForceGraph = ({ nodes, links, sharePower }) => {
+const ForceGraph = ({ nodes, links, sharePower, lowLimitTimestamp }) => {
   // const [selectedNode, setSelectedNode] = useState()
 
   function focusNode(graph, node) {
@@ -51,7 +51,6 @@ const ForceGraph = ({ nodes, links, sharePower }) => {
         .nodeLabel('label')
         // .nodeAutoColorBy('group')
         .nodeThreeObject((node: Node) => {
-          if (node.hidden) return
           let imageUrl
           if (node && node.image) {
             imageUrl = getImageFromIPFSHash(node.image)
@@ -65,7 +64,7 @@ const ForceGraph = ({ nodes, links, sharePower }) => {
             map: imgTexture,
             color: 0xffffff,
             transparent: true,
-            opacity: 0.8,
+            opacity: node.hidden ? 0.05 : 0.8,
           })
           const sprite = new THREE.Sprite(material)
           if (node.group === 0 || node.isSafeMinion) {
@@ -77,6 +76,10 @@ const ForceGraph = ({ nodes, links, sharePower }) => {
         })
         .onNodeClick((node) => {
           focusNode(graph, node)
+        })
+        .onNodeRightClick((node) => {
+          navigator.clipboard.writeText(node.id)
+          alert('Copied the text: ' + node.id)
         })
         .onNodeHover((node) => {
           if ((!node && !highlightNodes.size) || (node && hoverNode === node))
@@ -96,7 +99,7 @@ const ForceGraph = ({ nodes, links, sharePower }) => {
         })
         // .linkDirectionalParticles((link) => (highlightLinks.has(link) ? 3 : 0))
         // .linkDirectionalParticleWidth(3)
-        .linkWidth((link) => (highlightLinks.has(link) ? 5 : 0.8))
+        .linkWidth((link) => (highlightLinks.has(link) ? 5 : 0.8)) // if target.hidden = 0
         .linkColor((link) => (highlightLinks.has(link) ? 'green' : 'gray'))
         .graphData(gData)
 
@@ -127,13 +130,59 @@ const ForceGraph = ({ nodes, links, sharePower }) => {
   function zoomOut() {
     graph.current.zoomToFit(100)
   }
+  /*
+  function onWindowResize() {
+   camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    graph.setSize( window.innerWidth, window.innerHeight );
+    render();
+  }
+  */
 
   const graph = useRef(null)
+
   useEffect(async () => {
-    if (nodes && links) {
+    if (nodes && links && !graph.current) {
+      console.log(`create`)
       graph.current = await create3dGraph()
+    } else if (nodes && links && graph.current) {
+      console.log(`update`)
+      graph.current.graphData({ nodes, links })
     }
-  }, [nodes, links, sharePower])
+  }, [nodes, links])
+
+  /*   // how can i rerender without recreating all data?
+  useEffect(() => {
+    if(graph && graph.current){
+      console.log(`Called`)
+      const {nodes, links} = graph.current.graphData()
+      // lets try to filter in here!
+      if (nodes && links) {
+        const newNodes = nodes.map(x => {
+          const temp = Object.assign({}, x)
+          if (temp.createdAt > lowLimitTimestamp) {
+            temp.hidden = true
+          }
+          return temp
+        })
+        const newNodesAddresses = newNodes.map(x => {
+          if(!x.hidden) return x.id
+        })
+        const newLinks = links.filter(x => newNodesAddresses.includes(x.target.id))
+        if(newNodes && newLinks) {
+          const hide = newNodes.filter(x => x.hidden)
+          console.log(`${hide.length} nodes where hidden`)
+          console.log(nodes)
+          console.log(newNodes)
+          graph.current.graphData({newNodes, links})
+        }
+
+      }
+  
+    }
+  },[sharePower, lowLimitTimestamp])   
+*/
+  /*   window.addEventListener( 'resize', onWindowResize, false ); */
 
   return (
     <>

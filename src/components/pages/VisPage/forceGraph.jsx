@@ -1,10 +1,11 @@
 import ForceGraph3D from '3d-force-graph'
 import { Flex } from '@chakra-ui/react'
+/* import { timeStamp } from 'console' */
+import { GUI } from 'dat.gui'
 import makeBlockie from 'ethereum-blockies-base64'
 import React, { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
-
 import { getImageFromIPFSHash } from '../../../utils/web3/ipfs'
 import minionImg from './assets/minion.png'
 // migrate to Ts
@@ -64,7 +65,7 @@ const ForceGraph = ({ nodes, links, sharePower, lowLimitTimestamp }) => {
             map: imgTexture,
             color: 0xffffff,
             transparent: true,
-            opacity: node.hidden ? 0.05 : 0.8,
+            opacity: node.createdAt > lowLimitTimestamp ? 0.05 : 0.8,
           })
           const sprite = new THREE.Sprite(material)
           if (node.group === 0 || node.isSafeMinion) {
@@ -78,6 +79,7 @@ const ForceGraph = ({ nodes, links, sharePower, lowLimitTimestamp }) => {
           focusNode(graph, node)
         })
         .onNodeRightClick((node) => {
+          console.log(JSON.stringify(node))
           navigator.clipboard.writeText(node.id)
           alert('Copied the text: ' + node.id)
         })
@@ -117,6 +119,16 @@ const ForceGraph = ({ nodes, links, sharePower, lowLimitTimestamp }) => {
         graph.d3Force('link').distance(100)
       }
 
+      window.addEventListener('resize', onWindowResize, false)
+      function onWindowResize() {
+          console.log("resizing")
+/*           graph.camera.aspect = window.innerWidth / window.innerHeight
+          graph.camera.updateProjectionMatrix()
+          renderer.setSize(window.innerWidth, window.innerHeight)
+          render() 
+          */
+      }
+
       graph.onBackgroundClick(zoomOut)
       const bloomPass = new UnrealBloomPass()
       bloomPass.strength = 0.5
@@ -126,18 +138,34 @@ const ForceGraph = ({ nodes, links, sharePower, lowLimitTimestamp }) => {
       return graph
     }
   }
+  //Define GUI
+  const Settings = function() {
+    this.redDistance = 20
+    this.greenDistance = 20
+  }
+
+  const settings = new Settings()
+  // its creating it multiple times
+  let gui;
+  if (!gui) {
+    gui = new GUI({name: 'first GUI'})
+    gui.autoplace = false
+    gui.style = {
+      position: 'absolute',
+      top: '50px',
+      left: '20px'
+    }
+    const controllerOne = gui.add(settings, 'redDistance', 0, 100)
+    const controllerTwo = gui.add(settings, 'greenDistance', 0, 100)
+    controllerOne.onChange(updateLinkDistance)
+    controllerTwo.onChange(updateLinkDistance)  
+    
+  }
+  
 
   function zoomOut() {
     graph.current.zoomToFit(100)
   }
-  /*
-  function onWindowResize() {
-   camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    graph.setSize( window.innerWidth, window.innerHeight );
-    render();
-  }
-  */
 
   const graph = useRef(null)
 
@@ -147,46 +175,60 @@ const ForceGraph = ({ nodes, links, sharePower, lowLimitTimestamp }) => {
       graph.current = await create3dGraph()
     } else if (nodes && links && graph.current) {
       console.log(`update`)
+      // changing the timestamp in parent will update nodes & links so.. im cancelling it
       graph.current.graphData({ nodes, links })
     }
   }, [nodes, links])
 
-  /*   // how can i rerender without recreating all data?
+  // change this to createdAt in limits of controls
+  function updateLinkDistance() {
+    /*     graph.d3Force('link').distance(link => link.color ? settings.redDistance : settings.greenDistance); */
+        console.log(`graph ${JSON.stringify(graph)}`)
+        if (graph.current) {
+          graph.current.numDimensions(3); // Re-heat simulation
+        }
+      }
+   
+
+  /*     // how can i rerender without recreating all data?
   useEffect(() => {
     if(graph && graph.current){
       console.log(`Called`)
       const {nodes, links} = graph.current.graphData()
-      // lets try to filter in here!
+      // lets try to filter in here!      
       if (nodes && links) {
+        let nodesHidden = []; // fill up to make changes in links
         const newNodes = nodes.map(x => {
           const temp = Object.assign({}, x)
           if (temp.createdAt > lowLimitTimestamp) {
-            temp.hidden = true
+            temp.__threeObj.visible = false
+            nodesHidden.push(x.id)
           }
           return temp
         })
-        const newNodesAddresses = newNodes.map(x => {
-          if(!x.hidden) return x.id
+        const newLinks = links.map(x => {
+          const temp = Object.assign({}, x)
+          if (nodesHidden.includes(x.target.id)) {
+            temp.value = 0
+          }
+          return temp
         })
-        const newLinks = links.filter(x => newNodesAddresses.includes(x.target.id))
-        if(newNodes && newLinks) {
-          const hide = newNodes.filter(x => x.hidden)
-          console.log(`${hide.length} nodes where hidden`)
-          console.log(nodes)
-          console.log(newNodes)
-          graph.current.graphData({newNodes, links})
+        if(newNodes.length && newLinks.length) {
+          graph.current.graphData({newNodes, newLinks})
         }
-
-      }
-  
+      }  
     }
-  },[sharePower, lowLimitTimestamp])   
-*/
+  },[lowLimitTimestamp]) */   
+
   /*   window.addEventListener( 'resize', onWindowResize, false ); */
 
   return (
     <>
-      <Flex id="3d-graph" style={{ width: '50%', height: '30%' }} />
+      <Flex id="3d-graph" style={{ 
+        marginTop: '80px',
+        width: '50%', 
+        height: '30%' 
+        }} />
     </>
   )
 }

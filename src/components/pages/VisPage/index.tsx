@@ -241,7 +241,7 @@ export const VisPage = (): JSX.Element => {
         setLinks(acumLinks.flat())
       }
     }
-  }, [dataHolder, timestamp])
+  }, [dataHolder]) //, timestamp
 
   useEffect(() => {
     let maxVal

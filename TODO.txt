@@ -17,4 +17,3 @@ BUGS
 
 TOTEST
 - links construction based on !nodes.hidden
-- create timeline with createdAt attr

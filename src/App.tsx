@@ -1,14 +1,12 @@
-import { Button } from '@chakra-ui/button'
-import { Image } from '@chakra-ui/image'
-import { Box, Flex, Heading, Spacer } from '@chakra-ui/layout'
+import { Box, Flex } from '@chakra-ui/layout'
 import { Helmet } from 'react-helmet-async'
-import { Link } from 'react-router-dom'
 import { SWRConfig } from 'swr'
 
 import Routes from './Routes'
-import logo from './assets/img/logo.png'
+
 import { useCustomTheme } from './contexts/CustomThemeContext'
 import { getImageFromIPFSHash } from './utils/web3/ipfs'
+
 function App() {
   const { theme } = useCustomTheme()
   return (
@@ -27,38 +25,6 @@ function App() {
         />
       </Helmet>
       <Flex direction="column" bg="brand.darkBlue2" height="full">
-        <Box
-          width="full"
-          zIndex="10"
-          position="fixed"
-          bg="brand.darkBlue2"
-          borderBottom="1px solid"
-          borderColor="#373B49"
-        >
-          <Flex py="4" pr="4" pl="9">
-            <Link to="/">
-              <Flex alignItems="center">
-                <Image src={logo} mr="5" alt="Books" width={12} height={12} />
-                <Heading fontFamily="Mulish" variant="h1">
-                  DAO Visualization tool
-                </Heading>
-              </Flex>
-            </Link>
-            <Spacer />
-            <Link to="/Vis">
-              <Button
-                type="submit"
-                variant="outline"
-                style={{ margin: 'auto' }}
-                onClick={() => {
-                  console.log('send it!')
-                }}
-              >
-                Go Vis!
-              </Button>
-            </Link>
-          </Flex>
-        </Box>
         <Box sx={{ minHeight: '100vh' }} flex="1" overflowY="auto">
           <Flex direction="column" pt="20">
             <Box

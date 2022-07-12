@@ -1,13 +1,8 @@
-Modify DAO Books to host Planetharium
-- modify project meta/data.
-- display address connected DAOs (simple click ADD)
-- introduce filters (and subgraph queries)
+handle session/local storage to load metadata + default start
+- handle ENS retrieval for members
 - introduce events
-- introduce DAO accessing and information display
+- introduce DAO accessing and information display (GUI folder?)
 - proposals and votes (signaling events)
-- minions & user connected
-- members sized by shares/loot
-- members history recreation (createdAt) (select some DAOs and see the history)
 - members delegation
 BUGS
 - graphql query is limited to 100
@@ -15,5 +10,3 @@ BUGS
 - DAOs of older versions could have no image
 
 
-TOTEST
-- links construction based on !nodes.hidden

@@ -54,7 +54,6 @@ const ForceGraph = ({ nodes, links, minMax }) => {
     }
     const nodePreparation = (node) => {
       let imageUrl
-      console.log(`passes`)
       if (node && node.image) {
         imageUrl = getImageFromIPFSHash(node.image)
       } else if (node && node.isSafeMinion) {
@@ -103,12 +102,11 @@ const ForceGraph = ({ nodes, links, minMax }) => {
         deleteNodeOptions()
         nodeOptions = gui.addFolder('Node')
       }
-
       nodeOptions.add(settings.nodeSelected, 'id')
       const nodeData = {
         created: getDate(settings.nodeSelected.createdAt),
       }
-      nodeOptions.add(nodeData, 'created')
+      nodeOptions.add(nodeData, 'created')      
       const explorers = {
         mainnet: function () {
           openExplorer(
@@ -120,15 +118,40 @@ const ForceGraph = ({ nodes, links, minMax }) => {
             `https://blockscout.com/xdai/mainnet/address/${settings.nodeSelected.id}`
           )
         },
+        daohaus: function () {
+          openExplorer(
+            //TODO: fix the chain in the url
+            `https://app.daohaus.club/dao/0x64/${settings.nodeSelected.id}`
+          )
+        },
         // continue with others
       }
       nodeOptions.add(explorers, 'mainnet').name('Mainnet explorer')
       nodeOptions.add(explorers, 'gnosis').name('Gnosis explorer')
-
-      /*      nodeOptions.add(settings.nodeSelected, 'date')
-            nodeOptions.add(settings.nodeSelected, 'explorer') */
+      if(settings.nodeSelected.group === 0) {
+        // maybe create a DAO folder to include the specific functions
+        nodeOptions.add(explorers, 'daohaus').name('DaoHaus link')
+      }
     }
-
+    const functions = {
+      animate: function() {
+        const totalTime = 60 // 1 min
+        const interval = (minMax[1] - settings.timeLimit) / totalTime
+        // check interval is valid or we're fucked in a loop
+        const intervalId = setInterval(() => {
+          settings.timeLimit = settings.timeLimit + interval
+          settings.date = getDate(settings.timeLimit)
+          // how do i recreate without going trough all nodes?
+          gui.updateDisplay()
+          graph.nodeThreeObject((node: Node) => {
+            return nodePreparation(node)
+          })
+          if(settings.timeLimit >= minMax[1]) {
+            clearInterval(intervalId)
+          }
+        }, 1000)
+      }
+    }
     /* eslint-disable global-require */
     const spaceHolder = document.getElementById('3d-graph')
     const gData = { nodes, links }
@@ -143,24 +166,22 @@ const ForceGraph = ({ nodes, links, minMax }) => {
       this.date = getDate(minMax[1])
       this.nodeSelected = null
     }
-    /* id : nodeSelected.id,
-    date : getDate(nodeSelected.createdAt),
-    explorer : () => {
-      window.open(`https://etherscan.io/address/${nodeSelected.id}`, '_blank').focus();
-    } */
     const settings = new Settings()
     const gui = new GUI({
       name: 'first GUI',
       autoplace: false,
       useLocalStorage: true,
+      width: 500,
     })
     const properties = gui.addFolder('Properties')
     const controllerOne = properties.add(
       settings,
       'timeLimit',
       minMax[0],
-      minMax[1]
+      minMax[1],
+      24*60*60
     )
+    properties.add(functions, 'animate').name('Animate timeline')
     const sharePowerCheckbox = properties.add(settings, 'sharePower')
     properties.add(settings, 'date')
     controllerOne.onFinishChange((e) => {
@@ -219,12 +240,12 @@ const ForceGraph = ({ nodes, links, minMax }) => {
     /*    Fix this.. search for the correct method   
       window.addEventListener('resize', onWindowResize, false) */
 
-    /*     const bloomPass = new UnrealBloomPass()
+    /* const bloomPass = new UnrealBloomPass()
     bloomPass.strength = 0.2
     bloomPass.radius = 1
     bloomPass.threshold = 0.3
-    graph.postProcessingComposer().addPass(bloomPass)
-    */
+    graph.postProcessingComposer().addPass(bloomPass) */
+   
   }
   init()
   return <></>

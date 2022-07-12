@@ -44,15 +44,13 @@ export const VisPage = (): JSX.Element => {
   // const [daoSelected, setDaoSelected] = useState()
   const [dataHolder, setDataHolder] = useState<daoObject[]>()
   //--------------------------------- TODO LIST
-  // keep objects in session storage for user save/delete
-  // add GUI to test
-  // copy address / open etherscan
   //
 
   //--------------------------------- DATA TO APP
   const [list, setList] = useState([
     '0xef3d8c4fbb1860fceab16595db7e650cd5ad51c1', // starter (daoHausWarcamp)
   ])
+
   const getApiMetadata = async () => {
     try {
       console.log(`fetching daoMeta`)
@@ -65,11 +63,10 @@ export const VisPage = (): JSX.Element => {
     }
   }
   //--------------------------------- DATA FILTERS
-
   useEffect(() => {
     function filterList(data) {
-      const found = Object.values(data).filter((x) => {
-        return x[0].name.toLowerCase().includes(search.toLowerCase())
+      const found = data.filter((x) => {
+        return x.name.toLowerCase().includes(search.toLowerCase())
       })
       if (found.length) {
         setSearchList(found)
@@ -108,10 +105,18 @@ export const VisPage = (): JSX.Element => {
     })
   }
 
+  function saveToLocalStorage() {
+    window.localStorage.removeItem('daohaus-vis.default')
+    const data = {
+      dataHolder,
+    }
+    window.localStorage.setItem('daohaus-vis.default', JSON.stringify(data))
+  }
+
   async function addDaos(daosList) {
     const newDataPromises = []
     provisionalList.forEach((x) => {
-      newDataPromises.push(getGraphProps(x.contractAddress))
+      newDataPromises.push(getGraphProps(x.id))
     })
     Promise.all(newDataPromises).then((results) => {
       setDataHolder(dataHolder.concat(results))
@@ -119,24 +124,8 @@ export const VisPage = (): JSX.Element => {
     })
   }
 
-  // async function addDao(daoAddress) {
-  //   const newData = await getGraphProps(daoAddress)
-  //   if (!newData.error) {
-  //     // handle errors! there are many groups with no member, no moloch, etc
-  //     // moloch v1 has no image and does not handle that
-  //     const newArray = dataHolder.concat(newData)
-  //     setDataHolder(newArray)
-  //   }
-  // }
-
   function createData(data) {
     const nnodes = data.moloch.members.map((x) => {
-      let minion
-      if (x.isSafeMinion?.id) {
-        minion = true
-      } else {
-        minion = false
-      }
       return {
         id: x.memberAddress,
         label: x.memberAddress, // ENS would be just.. great..
@@ -144,7 +133,7 @@ export const VisPage = (): JSX.Element => {
         size: 2,
         shares: x.shares,
         loot: x.loot,
-        isSafeMinion: minion,
+        isSafeMinion: x.isSafeMinion,
         createdAt: parseInt(x.createdAt, 10),
       }
     })
@@ -211,13 +200,29 @@ export const VisPage = (): JSX.Element => {
 
   useEffect(async () => {
     setLoading(true)
-    // first check session storage
-    const daoHausMetadata = await getApiMetadata()
-    if (daoHausMetadata) {
-      // maybe use session storage to make it faster
-      setApiData(daoHausMetadata)
+    const ssMeta = sessionStorage.getItem('api_meta')
+    if (ssMeta) {
+      setApiData(JSON.parse(ssMeta))
+    } else {
+      const daoHausMetadata = await getApiMetadata()
+      if (daoHausMetadata) {
+        const cleaned = Object.entries(daoHausMetadata).map((x) => {
+          return {
+            id: x[0],
+            name: x[1][0].name,
+            network: x[1][0].network,
+          }
+        })
+        setApiData(cleaned)
+        sessionStorage.setItem('api_meta', JSON.stringify(cleaned))
+      }
     }
-    updateProps()
+    const defaultState = window.localStorage.getItem('daohaus-vis.default')
+    if (defaultState) {
+      setDataHolder(JSON.parse(defaultState).dataHolder)
+    } else {
+      updateProps()
+    }
     setLoading(false)
   }, [])
 
@@ -230,10 +235,6 @@ export const VisPage = (): JSX.Element => {
         {loading && <p style={{ color: 'white' }}>Loading..</p>}
         <HStack>
           <VStack align="stretch" spacing={4}>
-            <p style={{ color: 'white' }}>
-              Right click on node to copy to clipboard
-            </p>
-            <p style={{ color: 'white' }}>TODO: save to session storage</p>
             <span style={{ color: 'white' }}>
               <input
                 type="string"
@@ -275,21 +276,23 @@ export const VisPage = (): JSX.Element => {
                     <Tr>
                       <Th>Name</Th>
                       <Th>Network</Th>
-                      <Th>Select</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
                     {searchList.map((x, i) => {
                       return (
                         <Tr key={i}>
-                          <Td>{x[0].name}</Td>
-                          <Td>{x[0].network}</Td>
+                          <Td>{x.name}</Td>
+                          <Td>{x.network}</Td>
                           <Td>
-                            <Checkbox
-                              onChange={(e) =>
-                                handleProvisionalList(e.target.checked, x)
-                              }
-                            />
+                            <button
+                              onClick={() => {
+                                handleProvisionalList(true, x)
+                                searchList.splice(i, 1)
+                              }}
+                            >
+                              ADD
+                            </button>
                           </Td>
                         </Tr>
                       )
@@ -351,7 +354,6 @@ export const VisPage = (): JSX.Element => {
                 </Center>
               </TableContainer>
             )}
-
             {dataHolder?.length && (
               <div>
                 {dataHolder.map((i, index) => {
@@ -390,19 +392,24 @@ export const VisPage = (): JSX.Element => {
                 })}
               </div>
             )}
+            {/*check for updates and then display save button*/}
+            <button
+              style={{
+                color: 'white',
+                border: '1px solid white',
+                borderRadius: '5px',
+              }}
+              onClick={() => saveToLocalStorage()}
+            >
+              SAVE
+            </button>
           </VStack>
           {nodes && links && minMax[1] && (
             <ForceGraph nodes={nodes} links={links} minMax={minMax} />
           )}
         </HStack>
       </Stack>
-      <Flex
-        id="3d-graph"
-        style={{
-          width: '50%',
-          height: '30%',
-        }}
-      />
+      <Flex id="3d-graph" />
     </HStack>
   )
 }
